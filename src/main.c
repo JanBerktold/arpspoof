@@ -85,23 +85,31 @@ void *worker(void* thread_p) {
 	}
 }
 
-int main(int argc, char *argv[]) {
+int find_interface(char* name) {
 	struct if_nameindex* start_iface = if_nameindex();
 	struct if_nameindex* current_iface = start_iface;
+	int retval = -1;
 
 	while (current_iface->if_index > 0) {
-		if (strcmp(current_iface->if_name, argv[1])) {
+		if (strcmp(current_iface->if_name, name)) {
 			INTERFACE_INDEX = current_iface->if_index;		
-			INTERFACE_NAME = argv[1];
-			if_freenameindex(start_iface);
-			goto main_work;		
+			INTERFACE_NAME = name;
+			retval = 0;
+			break;
 		}
 		current_iface++;
 	}
-	printf("did not find interface with name %s\n", argv[1]);
-	exit(1);
 
-main_work:
+	if_freenameindex(start_iface);
+	return retval;
+}
+
+int main(int argc, char *argv[]) {
+	if (find_interface(argv[1]) < 0 ) {
+		printf("did not find interface with name %s\n", argv[1]);
+		exit(1);
+	}
+
 	for (int i = 0; i < WORKER_THREADS; i++) {
 		threads[i] = malloc(sizeof(struct thread_info));
 		threads[i]->id = i;
