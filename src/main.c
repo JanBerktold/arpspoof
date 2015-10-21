@@ -26,11 +26,7 @@ char* INTERFACE_NAME;
 
 struct thread_info {
 	int id;
-	char status;
-
 	pthread_t thread;
-	pthread_cond_t cond;
-	pthread_mutex_t mutex;
 
 	void* buffer;
 	size_t length;
@@ -113,7 +109,6 @@ int main(int argc, char *argv[]) {
 	for (int i = 0; i < WORKER_THREADS; i++) {
 		threads[i] = malloc(sizeof(struct thread_info));
 		threads[i]->id = i;
-		threads[i]->status = 0;
 
 		// init buffer
 		threads[i]->buffer = malloc(BUFFER_SIZE);
@@ -121,10 +116,6 @@ int main(int argc, char *argv[]) {
 			printf("failed to create buffer\n");
 			exit(1);
 		}
-
-		// init thread
-		threads[i]->cond = (pthread_cond_t) PTHREAD_COND_INITIALIZER;		
-		pthread_mutex_init (&threads[i]->mutex, NULL);
 
 		// spawn thread
 		int rc = pthread_create(&threads[i]->thread, NULL, worker, threads[i]);
