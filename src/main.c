@@ -15,13 +15,13 @@
 
 #include <net/if.h>
 
+#include "header.h"
 #include "dhcp.h"
 #include "arp.h"
 
 #define WORKER_THREADS 8
 #define BUFFER_SIZE 1500
 
-#define MAC_ADDR_LENGTH 6
 int INTERFACE_INDEX;
 char* INTERFACE_NAME;
 
@@ -33,17 +33,13 @@ struct thread_info {
 	size_t length;
 } *threads[WORKER_THREADS];
 
-struct  ether_header {
-    u_int8_t    dest_host[MAC_ADDR_LENGTH];
-    u_int8_t    source_host[MAC_ADDR_LENGTH];
-    u_int16_t   protocol;
-};
-
 void *worker(void* thread_p) {
 	struct thread_info* thread = thread_p;
 
 	struct ether_header* eth_hdr = (struct ether_header*)thread->buffer;
-	struct iphdr* ip_hdr = (struct iphdr*)(thread->buffer + sizeof(struct ether_header));
+	struct ip_header* ip_hdr = (struct ip_header*)(eth_hdr + sizeof(struct ether_header));
+	
+	//struct udp_header* udp_hdr = (struct udp_header*)(ip_hdr + sizeof(struct ip_header));
 
 	int t_socket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
 	
@@ -76,7 +72,10 @@ void *worker(void* thread_p) {
 		thread->length = recv(t_socket, thread->buffer, BUFFER_SIZE, 0);
 		switch (ntohs(eth_hdr->protocol)) {
 			case ETH_P_IP:
-				// DHCP, if UDP, Port 67(ß) and starts with UDP
+				// DHCP, if UDP, Port 67
+				if (handle_if_dhcp_packet(ip_hdr, thread->length-sizeof(struct ether_header))) {
+					continue;
+				}
 				printf("handle IPv4 pkg with length %zd and secret protocol %hu from thread %i\n", thread->length, ip_hdr->protocol, thread->id);
 				break;
 			case ETH_P_ARP:
