@@ -1,6 +1,9 @@
 #include <stdio.h>
+#include "header.h"
+#include <netinet/in.h>
 
-int handle_arp_packet(void* buffer, size_t length) {
+int handle_arp_packet(struct arp_data* arp) {
+	print_arp_data(arp);
 	return 0;
 }
 

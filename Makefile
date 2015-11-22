@@ -14,15 +14,16 @@ COMPILE_FLAGS = -std=c99 -Wall -g
 # Additional release-specific flags
 RCOMPILE_FLAGS = -D NDEBUG
 # Additional debug-specific flags
-DCOMPILE_FLAGS = -D DEBUG
+DCOMPILE_FLAGS = -D DEBUG -pg
 # Add additional include paths
 INCLUDES = -I $(SRC_PATH)/
 # General linker settings
+
 LINK_FLAGS = -lpthread
 # Additional release-specific linker settings
 RLINK_FLAGS =
 # Additional debug-specific linker settings
-DLINK_FLAGS =
+DLINK_FLAGS = -pg
 # Destination directory, like a jail or mounted system
 DESTDIR = /
 # Install path (bin/ is appended automatically)

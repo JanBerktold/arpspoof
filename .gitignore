@@ -2,3 +2,4 @@ spoofy
 build/
 bin/
 tmp/
+*.swp

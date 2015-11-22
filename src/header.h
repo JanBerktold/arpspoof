@@ -2,6 +2,7 @@
 #define HEADER_DEFINED
 
 #include <stdint.h>
+#include <asm/byteorder.h>
 
 #define MAC_ADDR_LENGTH 6
 
@@ -11,15 +12,37 @@ struct ether_header {
     uint16_t   protocol;
 };
 
+struct arp_data {
+	uint16_t hardware_type;
+	uint16_t protocol_type;
+	uint8_t hardware_addr_length;
+	uint8_t protocol_addr_length;
+	uint16_t operation;
+	uint8_t first_addr_byte;
+	// followed by hardware & protocol addr
+};
+
+// handle with variable sized addresses
+uint8_t* arp_sender_hardware_addr(struct arp_data*);
+uint8_t* arp_sender_protocol_addr(struct arp_data*);
+uint8_t* arp_target_hardware_addr(struct arp_data*);
+uint8_t* arp_target_protocol_addr(struct arp_data*);
+
 struct ip_header {
-    unsigned char version:4, header_length:4;
-    uint8_t type_of_service;      
-    uint16_t total_length; 
-    uint16_t id;  
-    uint16_t flags;  //2 Byte
-    uint8_t time_to_live;       //1 Byte
-    uint8_t protocol;         //1 Byte
-    uint16_t header_checksum;  
+#if defined(__LITTLE_ENDIAN_BITFIELD)
+	unsigned char header_length:4, version:4;	
+#elif defined (__BIG_ENDIAN_BITFIELD)	
+	unsigned char version:4, header_length:4;
+#else
+#error "Neither endian type is defined."	
+#endif
+	uint8_t type_of_service;      
+	uint16_t total_length; 	
+	uint16_t id;  
+	uint16_t flags;
+ 	uint8_t time_to_live;
+	uint8_t protocol;
+	uint16_t header_checksum;  
 	uint32_t source;       
 	uint32_t dest;
 };
@@ -30,5 +53,12 @@ struct udp_header {
         uint16_t length;
         uint16_t checksum;
 };
+
+
+void print_ether_header(struct ether_header*);
+void print_arp_data(struct arp_data*);
+void print_ip_header(struct ip_header*);
+void print_udp_header(struct udp_header*);
+//void print_tcp_header(struct tcp_header* header);
 
 #endif
