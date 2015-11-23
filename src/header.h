@@ -3,8 +3,25 @@
 
 #include <stdint.h>
 #include <asm/byteorder.h>
+#include <pthread.h>
 
 #define MAC_ADDR_LENGTH 6
+
+struct thread_info {
+	int id;
+	pthread_t thread;
+
+	int socket;
+	int if_index;
+
+	void* buffer;
+	size_t length;
+
+	void* send_buffer;
+	size_t send_length;
+};
+
+int thread_send_buffer(struct thread_info*);
 
 struct ether_header {
     uint8_t    dest_host[MAC_ADDR_LENGTH];

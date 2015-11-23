@@ -1,7 +1,45 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <header.h>
+#include <sys/socket.h>
 #include <netinet/in.h>
+#include <errno.h>
+#include <string.h>
+#include <fcntl.h>
+#include <linux/if_ether.h>
+#include <linux/if_packet.h>
+
+int thread_send_buffer(struct thread_info* thread) {
+	struct ether_header* ether = (struct ether_header*)thread->send_buffer;
+        struct sockaddr_ll socket_address;
+
+	socket_address.sll_family   = PF_PACKET;
+	socket_address.sll_protocol = htons(ETH_P_IP);
+	socket_address.sll_ifindex = thread->if_index;
+	socket_address.sll_hatype = htons(1);
+	socket_address.sll_pkttype = PACKET_OTHERHOST;
+	socket_address.sll_halen = 6;
+	memcpy(socket_address.sll_addr, ether->dest_host, 6);
+	
+	printf("PROTOCOL %i\n", socket_address.sll_protocol);
+	printf("IF_INDEX %i\n", socket_address.sll_ifindex);
+        printf("\t MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
+                socket_address.sll_addr[0], socket_address.sll_addr[1],
+                socket_address.sll_addr[2], socket_address.sll_addr[3],
+                socket_address.sll_addr[4], socket_address.sll_addr[5]);
+
+
+	int res = sendto(
+		thread->socket, 
+                thread->send_buffer, thread->send_length,
+		0, (struct sockaddr*)&socket_address,
+		sizeof(struct sockaddr_ll)
+	);
+
+        perror("sendto()");
+
+	return res;
+}
 
 void print_ether_header(struct ether_header* header) {
         printf("Ether Header [Layer 2]\n");
